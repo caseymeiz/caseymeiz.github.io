@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Sass watcher
+tmux new-session -d -s "sass"
+tmux send -t sass "node-sass --watch src/sass/main.sass --output ./" ENTER
+
+
+# Pug watcher
+tmux new -d -s "pug"
+tmux send -t pug "pug -w src/pug/index.pug -o ./" ENTER
+
+
+# Server
+tmux new -d -s "server"
+tmux send -t server "lite-server" ENTER
+
+
+
