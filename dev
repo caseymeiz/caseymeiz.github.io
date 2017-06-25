@@ -1,19 +1,19 @@
 #!/bin/sh
 
 # Sass watcher
-printf "Starting node-sass ... "
+printf "%-50s %s" "node-sass"
 tmux new-session -d -s "sass"
 tmux send -t sass "node-sass --watch src/sass/main.sass --output ./" ENTER
 printf "done\n"
 
 # Pug watcher
-printf "Starting pug ... "
+printf "%-50s %s" "pug"
 tmux new -d -s "pug"
 tmux send -t pug "pug -w src/pug/index.pug -o ./" ENTER
 printf "done\n"
 
 # Server
-printf "Starting lite-server ... "
+printf "%-50s %s" "lite-server"
 tmux new -d -s "server"
 tmux send -t server "lite-server" ENTER
 printf "done\n"
