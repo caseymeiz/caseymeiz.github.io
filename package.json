@@ -1,17 +1,15 @@
 {
-  "name": "mysite",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "lite-server": "^2.3.0",
-    "node-sass": "^4.5.3",
-    "pug": "^2.0.0-rc.2",
-    "pug-cli": "^1.0.0-alpha6"
-  }
+	"name": "caseymeiz.github.io",
+	"version": "1.0.0",
+	"description": "Personal site",
+	"main": "index.js",
+	"repository": "git@github.com:caseymeiz/caseymeiz.github.io.git",
+	"author": "Casey Meisenzahl <cjm6121@cs.rit.edu>",
+	"license": "MIT",
+	"dependencies": {
+		"browser-sync": "^2.24.6",
+		"concurrently": "^3.6.1",
+		"node-sass": "^4.9.3",
+		"pug-cli": "^1.0.0-alpha6"
+	}
 }
