@@ -11,5 +11,11 @@
 		"concurrently": "^3.6.1",
 		"node-sass": "^4.9.3",
 		"pug-cli": "^1.0.0-alpha6"
+	},
+	"scripts": {
+		"watch-pug": "pug --pretty --watch pug/index.pug --out ./",
+		"watch-sass": "node-sass --watch sass/main.sass --output ./",
+		"dev-server": "browser-sync -w index.html",
+		"dev": "concurrently -k 'yarn watch-pug' 'yarn watch-sass' 'yarn dev-server'"
 	}
 }
