@@ -19,7 +19,7 @@ Run ```build``` to just compile Pug and Sass files
 ```
 yarn build
 ```
-Run ```dev``` to use ```browser-sync``` as a development server / live reload. 
+Run ```dev``` to use ```browser-sync``` as a development server / live reload. The Pug and Sass files will be watched and built automatically.
 
 ```
 yarn dev
