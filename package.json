@@ -13,6 +13,9 @@
 		"pug-cli": "^1.0.0-alpha6"
 	},
 	"scripts": {
+		"build-pug": "pug --pretty pug/index.pug --out ./",
+		"build-sass": "node-sass sass/main.sass --output ./",
+		"build": "yarn build-pug && yarn build-sass",
 		"watch-pug": "pug --pretty --watch pug/index.pug --out ./",
 		"watch-sass": "node-sass --watch sass/main.sass --output ./",
 		"dev-server": "browser-sync -w index.html",
