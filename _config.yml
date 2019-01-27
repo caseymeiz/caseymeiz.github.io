@@ -26,5 +26,4 @@ sass:
 exclude: [vendor]
 
 
-remote_theme: caseymeiz/paper-jekyll-theme
-
+remote_theme: mkchoi212/paper-jekyll-theme
