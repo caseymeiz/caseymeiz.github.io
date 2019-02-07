@@ -5,7 +5,7 @@ permalink: /projects/
 ---
 
 Show off your projects here!
-- [Awesome Project]()
+- [Tic Tac Toe](https://github.com/caseymeiz/Tic-Tac-Toe)
 - [Cool Project]()
 - [New Project]()
 - [Old Project]()
