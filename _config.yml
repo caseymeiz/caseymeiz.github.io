@@ -1,0 +1,26 @@
+# Site settings
+title: "Casey Meisenzahl"
+description: >
+  Write a description of your website here.
+
+author: Casey Meisenzahl
+email: caseymeiz@gmail.com
+twitter_username: meizzzzz
+github_username: caseymeiz
+
+
+url: "https://caseymeiz.github.io" 
+
+google_analytics_id: UA-46216076-2
+disqus_id:
+
+# Build settings
+include: [_pages]
+markdown: kramdown
+permalink: /:year/:month/:title.html
+
+sass:
+    style: compressed
+
+exclude: [vendor]
+
