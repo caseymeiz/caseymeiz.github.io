@@ -15,9 +15,3 @@ Thanks for stopping by! Send me an email if you want to chat.
 
 
 <a href="mailto:{{ site.email }}">{{ site.email }}</a>
-
-
-<div>
-
-{%- include social.html -%}
-</div>
