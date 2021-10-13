@@ -65,14 +65,17 @@ function update() {
      .attr("cx", d => d.b.origin.x)
      .attr("r", d => d.b.radius)
     
-    ab.selectAll("path")
-    .data([venn])
-    .join("path")
-    .attr("d", d => `
-        M ${d.a_and_b.chord[0].x} ${d.a_and_b.chord[0].y}
-        A ${d.a.radius} ${d.a.radius} 0 0 0 ${d.a_and_b.chord[1].x} ${d.a_and_b.chord[1].y}
-        M ${d.a_and_b.chord[0].x} ${d.a_and_b.chord[0].y}
-        A ${d.b.radius} ${d.b.radius} 0 0 1 ${d.a_and_b.chord[1].x} ${d.a_and_b.chord[1].y}
-        `)
+    if (venn.a_and_b.chord.length === 2){
+        ab.selectAll("path")
+        .data([venn])
+        .join("path")
+        .attr("d", d => `
+            M ${d.a_and_b.chord[0].x} ${d.a_and_b.chord[0].y}
+            A ${d.a.radius} ${d.a.radius} 0 0 0 ${d.a_and_b.chord[1].x} ${d.a_and_b.chord[1].y}
+            M ${d.a_and_b.chord[0].x} ${d.a_and_b.chord[0].y}
+            A ${d.b.radius} ${d.b.radius} 0 0 1 ${d.a_and_b.chord[1].x} ${d.a_and_b.chord[1].y}
+            `)
+    }
+
 }
 update()

@@ -14,13 +14,13 @@ let _config =  {
 
 function circle_intersection(c1, c2) {
     let d = distance(c1.origin, c2.origin)
-    if (d > c1.radius + c2.radius) {
-        return []
-    }
     let a = (d**2 + c1.radius**2 - c2.radius**2)/(2*d)
     let h = Math.sqrt(c1.radius**2 - a**2)
     let x = c1.origin.x + a*(c2.origin.x - c1.origin.x)/d
     let y = c1.origin.y + a*(c2.origin.y - c1.origin.y)/d
+    if (isNaN(d) || isNaN(a) || isNaN(h)){
+        console.error("err")
+    }
     return [
         new Point(x + h*(c2.origin.y - c1.origin.y)/d, y + h*(c2.origin.x - c1.origin.x)/d),
         new Point(x - h*(c2.origin.y - c1.origin.y)/d, y - h*(c2.origin.x - c1.origin.x)/d)
@@ -29,6 +29,17 @@ function circle_intersection(c1, c2) {
 
 
 function circle_intersection_area(c1, c2) {
+    let d = distance(c1.origin, c2.origin)
+    if (d >= c1.radius + c2.radius) {
+        return 0
+    }
+    if (d <= Math.abs(c1.radius - c2.radius)) {
+        if (c1.radius < c2.radius) {
+            return Math.PI*c1.radius**2
+        }
+        return Math.PI*c2.radius**2
+    }
+
     let chord = circle_intersection(c1, c2)
     if (chord.length !== 2) {
         return 0
@@ -60,7 +71,7 @@ function search(r0, r1, goal_area) {
         let a = new Circle(new Point(-(current/2), 0), r0)
         let b = new Circle(new Point(current/2, 0), r1)
         current_area = circle_intersection_area(a, b)
-        if (Math.abs(current_area - goal_area) < epsilon) {
+        if (Math.abs(current_area - goal_area) <= epsilon) {
             return current
         }
         if (current_area > goal_area) {
@@ -76,6 +87,15 @@ function search(r0, r1, goal_area) {
     return current
 }
 
+function intersection_exists(c1, c2) {
+    let d = distance(c1.origin, c2.origin)
+
+    if (d >= c1.radius + c2.radius || d <= Math.abs(c1.radius - c2.radius)) {
+        return false
+    }
+    return true
+}
+
 
 function eulerDiagram(data = _config) {
     let a = new Circle()
@@ -84,10 +104,10 @@ function eulerDiagram(data = _config) {
     a.radius = Math.sqrt(data.a.probability/Math.PI)
     b.radius = Math.sqrt(data.b.probability/Math.PI)
 
-    let distance = search(a.radius, b.radius, data.a_and_b.probability)
+    let d = search(a.radius, b.radius, data.a_and_b.probability)
 
-    a.origin = new Point(-distance/2, 0)
-    b.origin = new Point(distance/2, 0)
+    a.origin = new Point(-d/2, 0)
+    b.origin = new Point(d/2, 0)
 
     data.a.origin = a.origin
     data.a.radius = a.radius
@@ -95,7 +115,8 @@ function eulerDiagram(data = _config) {
     data.b.origin = b.origin
     data.b.radius = b.radius
 
-    data.a_and_b.chord = circle_intersection(data.a, data.b)
+
+    data.a_and_b.chord = intersection_exists(data.a, data.b) ?  circle_intersection(data.a, data.b) :[]
     return data 
 }
 
