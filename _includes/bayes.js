@@ -1,3 +1,6 @@
+
+//https://mathworld.wolfram.com/Circle-CircleIntersection.html
+
 //https://mathworld.wolfram.com/CircularSegment.html
 //https://www.mathsisfun.com/geometry/circle-sector-segment.html
 //http://paulbourke.net/geometry/circlesphere/
@@ -43,11 +46,17 @@ function update() {
         }
     }
 
+
     d3.select("#a-value").text(`P(A) = ${slider_a.node().value}`)
     d3.select("#b-value").text(`P(B) = ${slider_b.node().value}`)
     d3.select("#ab-value").text(`P(A and B) = ${slider_ab.node().value}`)
 
 
+    let [valid, error_msg] = is_valid(data)
+    d3.select("#error").text(error_msg)
+    if (!valid) {
+        return
+    }
 
     let venn = eulerDiagram(data)
 
@@ -65,17 +74,16 @@ function update() {
      .attr("cx", d => d.b.origin.x)
      .attr("r", d => d.b.radius)
     
-    if (venn.a_and_b.chord.length === 2){
-        ab.selectAll("path")
-        .data([venn])
-        .join("path")
-        .attr("d", d => `
-            M ${d.a_and_b.chord[0].x} ${d.a_and_b.chord[0].y}
-            A ${d.a.radius} ${d.a.radius} 0 0 0 ${d.a_and_b.chord[1].x} ${d.a_and_b.chord[1].y}
-            M ${d.a_and_b.chord[0].x} ${d.a_and_b.chord[0].y}
-            A ${d.b.radius} ${d.b.radius} 0 0 1 ${d.a_and_b.chord[1].x} ${d.a_and_b.chord[1].y}
-            `)
-    }
+    ab.selectAll("path")
+    .data([venn])
+    .join("path")
+    .attr("d", d => `
+        M ${d.a_and_b.chord[0].x} ${d.a_and_b.chord[0].y}
+        A ${d.a_and_b.radius ? d.a_and_b.radius :d.a.radius} ${d.a_and_b.radius ? d.a_and_b.radius :d.a.radius} 0 ${d.a_and_b.a_major ? 1:0} 0 ${d.a_and_b.chord[1].x} ${d.a_and_b.chord[1].y}
+        M ${d.a_and_b.chord[0].x} ${d.a_and_b.chord[0].y}
+        A ${d.a_and_b.radius ? d.a_and_b.radius :d.b.radius} ${d.a_and_b.radius ? d.a_and_b.radius :d.b.radius} 0 ${d.a_and_b.b_major ? 1:0} 1 ${d.a_and_b.chord[1].x} ${d.a_and_b.chord[1].y}
+        `)
+
 
 }
 update()

@@ -16,3 +16,4 @@ scripts:
 <input id="ab" type="range" min=0 max=1 value="0.1" step="0.01">
 <p id="b-value"></p>
 <input id="b"  type="range" min=0 max=1  value="0.2" step="0.01">
+<p id="error"></p>
