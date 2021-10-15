@@ -37,7 +37,7 @@ In the image below you can see permutations of length 4 are built from permutati
 <div id="vis"></div>
 
 #### Counting K Permutations 
-Lets look at permutations of length 2 from $$\{a,b,c,d, e\}$$. We have 5 choices to select from for our first letter and 4 letters for our second letter. Thus $$ 5 \times 3 = 15$$ permutations of length 2. 
+Lets look at permutations of length 2 from $$\{a,b,c,d, e\}$$. We have 5 choices to select from for our first letter and 4 letters for our second letter. Thus $$ 5 \times 4 = 20$$ permutations of length 2. 
 
 This looks very similar to factorial except we want to slice off the last part of the multiplication.
 

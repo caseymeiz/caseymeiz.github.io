@@ -32,18 +32,13 @@ function circle_intersection_area(c1, c2) {
     let d = distance(c1.origin, c2.origin)
     if (d >= c1.radius + c2.radius) {
         return 0
-    }
-    if (d < Math.abs(c1.radius - c2.radius)) {
+    } else if (d < Math.abs(c1.radius - c2.radius)) {
         if (c1.radius < c2.radius) {
             return Math.PI*c1.radius**2
         }
         return Math.PI*c2.radius**2
     }
-
     let chord = circle_intersection_points(c1, c2)
-    if (chord.length !== 2) {
-        return 0
-    }
     let c1_segment = circle_segment_area(c1, chord)
     let c2_segment = circle_segment_area(c2, chord)
     return c1_segment + c2_segment
@@ -89,20 +84,7 @@ function search(r0, r1, goal_area) {
             right = current
         }
     }
-    console.error(`Was not able to find location 
-    distance:${current} 
-    goal:${goal_area} 
-    area: ${current_area}`)
     return current
-}
-
-function circle_intersection_exists(c1, c2) {
-    let d = distance(c1.origin, c2.origin)
-
-    if (d >= c1.radius + c2.radius || d < Math.abs(c1.radius - c2.radius)) {
-        return false
-    }
-    return true
 }
 
 function is_valid(data) {
@@ -118,50 +100,99 @@ function is_valid(data) {
     return [true, ""]
 }
 
+function make_circle_path(circle) {
+    return `M ${circle.origin.x} ${circle.origin.y} 
+            m ${-circle.radius} 0 
+            a ${circle.radius} ${circle.radius} 0 1 0 ${2*circle.radius} 0
+            a ${circle.radius} ${circle.radius} 0 1 0 ${-2*circle.radius} 0`
+}
 
-function eulerDiagram(data = _config) {
-    
+function make_lense_path(c1, c2) {
+    let chord = circle_intersection_points(c1, c2)
+    let c1_major = is_major(c1, chord) ? 1 : 0
+    let c2_major = is_major(c2, chord) ? 1 : 0
+    return `
+        M ${chord[0].x} ${chord[0].y}
+        A ${c1.radius} ${c1.radius} 0 ${c1_major} 0 ${chord[1].x} ${chord[1].y}
+        M ${chord[0].x} ${chord[0].y}
+        A ${c2.radius} ${c2.radius} 0 ${c2_major} 1 ${chord[1].x} ${chord[1].y}
+        `
+}
+
+
+function eulerData(data = _config) {
     let a = new Circle()
     let b = new Circle()
 
     a.radius = Math.sqrt(data.a.probability/Math.PI)
     b.radius = Math.sqrt(data.b.probability/Math.PI)
-
     let d = search(a.radius, b.radius, data.a_and_b.probability)
-
     a.origin = new Point(-d/2, 0)
     b.origin = new Point(d/2, 0)
 
-    data.a.origin = a.origin
-    data.a.radius = a.radius
-    
-    data.b.origin = b.origin
-    data.b.radius = b.radius
+    data.a.path = () => make_circle_path(a)
+    data.b.path = () => make_circle_path(b)
 
-    if (d <= Math.abs(a.radius - b.radius)) {
-        if (a.radius > b.radius) {
-            data.a_and_b.chord = [new Point(b.origin.x, b.radius), new Point(b.origin.x, -b.radius)]
-            data.a_and_b.a_major = true
-            data.a_and_b.b_major = true
-            data.a_and_b.radius = b.radius
-        } else {
-            data.a_and_b.chord = [new Point(a.origin.x, a.radius), new Point(a.origin.x, -a.radius)]
-            data.a_and_b.a_major = true
-            data.a_and_b.b_major = true
-            data.a_and_b.radius = a.radius        
-        }
-    } else if (d >= a.radius + b.radius) {
-        data.a_and_b.chord = [new Point(0, 1), new Point(0, -1)]
-        data.a_and_b.a_major = true
-        data.a_and_b.b_major = true
-        data.a_and_b.radius = 1
+    let lens_path = ""
+    if (data.a_and_b.probability < 0) {
+        // no intersection
+        lens_path = ""
+    } else if (data.a_and_b.probability < data.a.probability &&
+               data.a_and_b.probability < data.b.probability) {
+        // partial intersection  
+        lens_path = make_lense_path(a, b)
     } else {
-        data.a_and_b.chord = circle_intersection_points(data.a, data.b)
-        data.a_and_b.a_major = is_major(a, data.a_and_b.chord)
-        data.a_and_b.b_major = is_major(b, data.a_and_b.chord)
+        // sub set
+        if (data.a.probability >= data.b.probability) {
+            lens_path  = make_circle_path(b)
+        } else {
+            lens_path  = make_circle_path(a)
+        }
     }
-
+    data.a_and_b.path = function() {
+        return lens_path
+    }
     return data 
 }
 
 
+function eulerDiagram() {
+
+    function onEnter(enter) {
+        let svg = enter.append("svg")
+            .attr("width", "50%")
+            .attr("viewBox", "0 0 1 1")
+        let g = svg.append("g").attr("transform","translate(.5, .5)")
+        g.append("g").attr("class", "set-a")
+        g.append("g").attr("class", "set-b")
+        g.append("g").attr("class", "set-a-and-b")
+        return svg
+    }
+
+    function chart(selection) {
+        selection.each(data => {
+            let svg = selection.selectAll("svg")
+                .data([data])
+                .join(onEnter)
+            svg.select("g")
+                .select(".set-a")
+                .selectAll("path")
+                .data([data])
+                .join("path")
+                .attr("d", d => d.a.path())
+            svg.select("g")
+                .select(".set-b")
+                .selectAll("path")
+                .data([data])
+                .join("path")
+                .attr("d", d => d.b.path())
+            svg.select("g")
+                .select(".set-a-and-b")
+                .selectAll("path")
+                .data([data])
+                .join("path")
+                .attr("d", d => d.a_and_b.path())
+        })
+    }
+    return chart
+}
