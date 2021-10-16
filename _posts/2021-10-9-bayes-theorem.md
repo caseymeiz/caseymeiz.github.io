@@ -1,21 +1,22 @@
 ---
 layout: post
+visible: 1
 title:  "Bayes' Theorem"
 date:   2021-10-09 11:24:04 -0400
+styles:
+- bayes.css
 scripts:
 - util.js
 - euler_diagram.js
 - bayes.js
 ---
 
+<div class="row">
+        <div id="p-of-a-and-b" class="column"></div>
+</div>
 
-<div id="vis"></div>
-<p id="a-value"></p>
-<input id="a"  type="range" min=0 max=1  value="0.3" step="0.01">
-<p id="ab-value"></p>
-<input id="ab" type="range" min=0 max=1 value="0.1" step="0.01">
-<p id="b-value"></p>
-<input id="b"  type="range" min=0 max=1  value="0.2" step="0.01">
-<p id="error"></p>
-
-<div id="test"></div>
+<div id="conditional-equation" class="row">
+    <div id="p-of-a-intersect-b" class="column"></div>
+    <div id="p-of-b-given-a" class="column"></div>
+    <div id="p-of-a-given-b" class="column"></div>
+</div>

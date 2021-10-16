@@ -1,5 +1,6 @@
 ---
 layout: post
+visible: 1
 title:  "Counting"
 date:   2021-10-05 11:24:04 -0400
 scripts:

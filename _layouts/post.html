@@ -25,6 +25,13 @@ layout: default
 
   <a class="u-url" href="{{ page.url | relative_url }}" hidden></a>
 </article>
+
+{% for style in page.styles %}
+<style>
+     {% include {{ style }} %}
+</style>
+{% endfor %}
+
 {% for js in page.scripts %}
 <script type="text/javascript">
    {% include {{ js }} %}

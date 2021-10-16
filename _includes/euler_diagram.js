@@ -132,6 +132,7 @@ function eulerData(data = _config) {
 
     data.a.path = () => make_circle_path(a)
     data.b.path = () => make_circle_path(b)
+    _.defaultsDeep(data, {"a": a, "b": b})
 
     let lens_path = ""
     if (data.a_and_b.probability < 0) {
@@ -157,15 +158,23 @@ function eulerData(data = _config) {
 
 
 function eulerDiagram() {
+    let center = "a_and_b"
+    let hide_universe = false
+    let hide_a = false
+    let hide_b = false
+    let hide_a_and_b = false
 
     function onEnter(enter) {
         let svg = enter.append("svg")
-            .attr("width", "50%")
+            .attr("width", "100%")
             .attr("viewBox", "0 0 1 1")
         let g = svg.append("g").attr("transform","translate(.5, .5)")
-        g.append("g").attr("class", "set-a")
-        g.append("g").attr("class", "set-b")
-        g.append("g").attr("class", "set-a-and-b")
+        g.append("g").attr("class", "set-u")
+            .append("circle").attr("cx", 0).attr("cy", 0).attr("r", .49)
+        let subset = g.append("g").attr("class", "subset")
+        subset.append("g").attr("class", "set-a")
+        subset.append("g").attr("class", "set-b")
+        subset.append("g").attr("class", "set-a-and-b")
         return svg
     }
 
@@ -174,6 +183,7 @@ function eulerDiagram() {
             let svg = selection.selectAll("svg")
                 .data([data])
                 .join(onEnter)
+            
             svg.select("g")
                 .select(".set-a")
                 .selectAll("path")
@@ -192,7 +202,55 @@ function eulerDiagram() {
                 .data([data])
                 .join("path")
                 .attr("d", d => d.a_and_b.path())
+
+            if (center === "a") {
+                svg.select(".subset").attr("transform", `translate(${data.b.origin.x})`)
+            }
+            if (center === "b") {
+                svg.select(".subset").attr("transform", `translate(${data.a.origin.x})`)
+            }
+
+
+            if (hide_universe) {
+                svg.select(".set-u").remove()
+            }
+            if (hide_a) {
+                svg.select(".set-a").remove()
+            }
+            if (hide_b) {
+                svg.select(".set-b").remove()
+            }
+            if (hide_a_and_b) {
+                svg.select(".set-a-and-b").remove()
+            }
+
         })
     }
+    chart.center = function(c) {
+        if (arguments === 0) return center
+        center = c
+        return chart
+    }
+    chart.hide_universe = function(bool) {
+        if (arguments === 0) return hide_universe
+        hide_universe = bool
+        return chart
+    }
+    chart.hide_a = function(bool) {
+        if (arguments === 0) return hide_a
+        hide_a = bool
+        return chart
+    }
+    chart.hide_b = function(bool) {
+        if (arguments === 0) return hide_b
+        hide_b = bool
+        return chart
+    }
+    chart.hide_a_and_b = function(bool) {
+        if (arguments === 0) return hide_a_and_b
+        hide_a_and_b = bool
+        return chart
+    }
+
     return chart
 }
