@@ -1,6 +1,6 @@
 ---
 layout: post
-visible: 1
+published: false
 title:  "Counting"
 date:   2021-10-05 11:24:04 -0400
 scripts:

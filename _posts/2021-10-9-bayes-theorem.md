@@ -1,6 +1,6 @@
 ---
 layout: post
-visible: 1
+published: false
 title:  "Bayes' Theorem"
 date:   2021-10-09 11:24:04 -0400
 styles:
