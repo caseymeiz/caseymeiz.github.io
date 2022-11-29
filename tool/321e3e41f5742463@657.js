@@ -157,11 +157,14 @@ class LineSegment {
 
 function _draw(d3,width,EventType){return(
 function draw (segments, active, events, event, pred, succ, intersections){
+      console.log("a")
+
   const svg = d3.create("svg")
       .attr("width", 500)
       .attr("height", 500)
       .attr("viewBox", '0 0 100 100');
-  
+ console.log("b")
+
   svg.append('g').selectAll("line")
     .data(segments)
     .join('line')
@@ -171,6 +174,7 @@ function draw (segments, active, events, event, pred, succ, intersections){
     .attr("y1", seg => seg.p.y)
     .attr("x2", seg => seg.q.x)
     .attr("y2", seg => seg.q.y);
+console.log("c")
 
   
   svg.append('g').selectAll("line")
@@ -182,7 +186,8 @@ function draw (segments, active, events, event, pred, succ, intersections){
     .attr("y1", seg => seg.p.y)
     .attr("x2", seg => seg.q.x)
     .attr("y2", seg => seg.q.y);
-  
+console.log("d")
+
   svg.append('g').selectAll('line')
     .data(events)
     .join('line')
@@ -193,25 +198,26 @@ function draw (segments, active, events, event, pred, succ, intersections){
     .attr("y1", e => 0)
     .attr("x2", e => e.x)
     .attr("y2", e => width);
-  
+ console.log("e")
+
   svg.append('g').selectAll("text")
     .data(segments)
     .join('text')
     .attr("font-size", '3px')
     .attr("x", seg => seg.p.x)
     .attr("y", seg => seg.p.y)
-    .text(seg => seg.name)  
+    .text(seg => seg.name);
+console.log("f")
 
   if (event) {
-    svg.append('g').selectAll('line')
-    .data([event])
-    .join('line')
-    .style("stroke", 'black')
-    .attr('stroke-width', .1)
-    .attr("x1", e => e.x)
-    .attr("y1", e => 0)
-    .attr("x2", e => e.x)
-    .attr("y2", e => width);
+    svg.append('g').selectAll('line').data([event])
+      .join('line')
+      .style("stroke", 'black')
+      .attr('stroke-width', .1)
+      .attr("x1", e => e.x)
+      .attr("y1", e => 0)
+      .attr("x2", e => e.x)
+      .attr("y2", e => width);
 
     var segments = []
     if (EventType.INTERSECTION === event.event_type){
@@ -221,7 +227,6 @@ function draw (segments, active, events, event, pred, succ, intersections){
       var [s1] = event.segments
       segments = [s1]
     }
-
     svg.append('g').selectAll('line')
     .data(segments)
     .join('line')
@@ -231,8 +236,15 @@ function draw (segments, active, events, event, pred, succ, intersections){
     .attr("y1", seg => seg.p.y)
     .attr("x2", seg => seg.q.x)
     .attr("y2", seg => seg.q.y);
+  }
+  
+console.log("g")
 
-    if (pred)
+
+  
+console.log("h")
+
+    if (pred){
     svg.append('g').selectAll('line')
     .data([pred])
     .join('line')
@@ -241,9 +253,9 @@ function draw (segments, active, events, event, pred, succ, intersections){
     .attr("x1", seg => seg.p.x)
     .attr("y1", seg => seg.p.y)
     .attr("x2", seg => seg.q.x)
-    .attr("y2", seg => seg.q.y);
+    .attr("y2", seg => seg.q.y);}
 
-    if (succ)
+    if (succ){
     svg.append('g').selectAll('line')
     .data([succ])
     .join('line')
@@ -253,14 +265,15 @@ function draw (segments, active, events, event, pred, succ, intersections){
     .attr("y1", seg => seg.p.y)
     .attr("x2", seg => seg.q.x)
     .attr("y2", seg => seg.q.y);
-
+    }
+console.log("i")
     svg.append('g').selectAll('line')
     .data(intersections)
     .join('circle')
     .attr("cx", (e,i) => e[0].x)
     .attr("cy", (e,i) => e[0].y)
     .attr("r", (e,i) =>  1);
-  } 
+  
 
   return svg.node()
 }
