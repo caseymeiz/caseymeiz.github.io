@@ -1,6 +1,6 @@
-# Plane Sweep Line Segments
+# Plane Sweep for Line segments
 
-https://observablehq.com/d/321e3e41f5742463@657
+https://observablehq.com/d/63aa8e454e1a65c4@475
 
 View this notebook in your browser by running a web server in this folder. For
 example:
@@ -14,14 +14,14 @@ import this module directly into your application. To npm install:
 
 ~~~sh
 npm install @observablehq/runtime@5
-npm install https://api.observablehq.com/d/321e3e41f5742463@657.tgz?v=3
+npm install https://api.observablehq.com/d/63aa8e454e1a65c4@475.tgz?v=3
 ~~~
 
 Then, import your notebook and the runtime as:
 
 ~~~js
 import {Runtime, Inspector} from "@observablehq/runtime";
-import define from "321e3e41f5742463";
+import define from "63aa8e454e1a65c4";
 ~~~
 
 To log the value of the cell named “foo”:
