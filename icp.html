@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<title>Interactive 2D ICP (D3.js)</title>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 16px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .toolbar button, .toolbar label { font-size: 14px; }
+  .toolbar .mode { padding: 6px 10px; border: 1px solid #ccc; background: #f7f7f7; border-radius: 6px; cursor: pointer; }
+  .toolbar .mode.active { background: #e6f0ff; border-color: #6ea8fe; }
+  .hint { color:#666; font-size: 13px; margin: 6px 0 10px 0; }
+  svg { border: 1px solid #ddd; border-radius: 8px; touch-action: none; }
+  .target { fill: steelblue; cursor: pointer; }
+  .source { fill: tomato; cursor: pointer; }
+  .pair-line { stroke: #999; stroke-dasharray: 4 4; pointer-events: none; }
+  .label { font-size: 11px; fill: #444; pointer-events: none; }
+</style>
+
+<div class="toolbar">
+  <!-- Modes -->
+  <button id="mode-add-target" class="mode active" title="Click canvas to add blue points (target)">Add Target</button>
+  <button id="mode-add-source" class="mode" title="Click canvas to add red points (source)">Add Source</button>
+  <button id="mode-drag" class="mode" title="Drag existing points">Drag</button>
+
+  <!-- Actions -->
+  <button id="btn-step">Next Iteration</button>
+  <button id="btn-auto">Start Auto</button>
+  <label><input type="checkbox" id="chk-lines" checked> show pairs</label>
+  <button id="btn-reset">Randomize Source (rigid)</button>
+  <button id="btn-clear-source">Clear Source</button>
+  <button id="btn-clear-target">Clear Target</button>
+  <button id="btn-clear-all">Clear All</button>
+</div>
+
+<div class="hint">
+  • Click canvas in <b>Add Target</b> or <b>Add Source</b> mode to place points. &nbsp;
+  • Switch to <b>Drag</b> to move points. &nbsp;
+  • <b>Right-click</b> a point to delete it. &nbsp;
+  • Use <b>Next Iteration</b> or <b>Start Auto</b> to run ICP. (Needs ≥ 3 points total recommended.)
+</div>
+
+<svg id="stage" width="720" height="520"></svg>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+(() => {
+  const svg = d3.select("#stage");
+  const W = +svg.attr("width"), H = +svg.attr("height");
+
+  let target = [];     // [[x,y], ...]
+  let source = [];     // [[x,y], ...]
+  let mode = "add-target"; // "add-target" | "add-source" | "drag"
+  let showLines = true;
+  let autoTimer = null;
+
+  // UI elements
+  const modes = {
+    "mode-add-target": "add-target",
+    "mode-add-source": "add-source",
+    "mode-drag": "drag",
+  };
+  for (const id in modes) {
+    d3.select("#" + id).on("click", () => setMode(modes[id]));
+  }
+  d3.select("#btn-step").on("click", () => { icpStep(); draw(); });
+  d3.select("#btn-auto").on("click", toggleAuto);
+  d3.select("#btn-reset").on("click", randomizeSourceFromTarget);
+  d3.select("#btn-clear-source").on("click", () => { source = []; draw(); });
+  d3.select("#btn-clear-target").on("click", () => { target = []; draw(); });
+  d3.select("#btn-clear-all").on("click", () => { target = []; source = []; draw(); });
+  d3.select("#chk-lines").on("change", (e) => { showLines = e.target.checked; draw(); });
+
+  function setMode(m) {
+    mode = m;
+    d3.selectAll(".mode").classed("active", false);
+    if (m === "add-target") d3.select("#mode-add-target").classed("active", true);
+    else if (m === "add-source") d3.select("#mode-add-source").classed("active", true);
+    else d3.select("#mode-drag").classed("active", true);
+  }
+
+  function toggleAuto() {
+    const btn = d3.select("#btn-auto");
+    if (autoTimer) {
+      clearInterval(autoTimer); autoTimer = null;
+      btn.text("Start Auto");
+    } else {
+      // Safety: only start if we have enough points
+      if ((target.length === 0) || (source.length === 0)) return;
+      autoTimer = setInterval(() => {
+        const moved = icpStep();
+        draw();
+        // stop when movement is tiny
+        if (!moved) { toggleAuto(); }
+      }, 200);
+      btn.text("Stop Auto");
+    }
+  }
+
+  // Background click handler for adding points
+  svg.on("click", (event) => {
+    const [x, y] = d3.pointer(event);
+    if (mode === "add-target") target.push([x, y]);
+    else if (mode === "add-source") source.push([x, y]);
+    draw();
+  });
+
+  // Layers
+  const gPairs = svg.append("g");
+  const gTarget = svg.append("g");
+  const gSource = svg.append("g");
+  const gLabels = svg.append("g");
+
+  const dragBehaviorTarget = d3.drag()
+    .on("drag", function (event, d) { d[0] = clamp(event.x, 0, W); d[1] = clamp(event.y, 0, H); draw(); });
+
+  const dragBehaviorSource = d3.drag()
+    .on("drag", function (event, d) { d[0] = clamp(event.x, 0, W); d[1] = clamp(event.y, 0, H); draw(); });
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  // Delete on right-click
+  function attachContextDelete(sel, arrayRef) {
+    sel.on("contextmenu", function(event, d) {
+      event.preventDefault();
+      const idx = arrayRef.indexOf(d);
+      if (idx >= 0) arrayRef.splice(idx, 1);
+      draw();
+    });
+  }
+
+  function draw() {
+    // Pairings (nearest neighbor from source to target)
+    const pairs = (target.length && source.length) ? source.map(p => [p, closest(p, target)]) : [];
+
+    // Pair lines
+    const lines = gPairs.selectAll("line").data(showLines ? pairs : [], d => d);
+    lines.join(
+      enter => enter.append("line")
+        .attr("class", "pair-line")
+        .attr("x1", d => d[0][0]).attr("y1", d => d[0][1])
+        .attr("x2", d => d[1][0]).attr("y2", d => d[1][1]),
+      update => update
+        .attr("x1", d => d[0][0]).attr("y1", d => d[0][1])
+        .attr("x2", d => d[1][0]).attr("y2", d => d[1][1]),
+      exit => exit.remove()
+    );
+
+    // Target points
+    const t = gTarget.selectAll("circle").data(target);
+    t.join(
+      enter => enter.append("circle")
+        .attr("class", "target")
+        .attr("r", 6)
+        .attr("cx", d => d[0]).attr("cy", d => d[1]),
+      update => update.attr("cx", d => d[0]).attr("cy", d => d[1]),
+      exit => exit.remove()
+    );
+    attachContextDelete(gTarget.selectAll("circle"), target);
+    gTarget.selectAll("circle").on("mousedown.drag", null); // reset
+    if (mode === "drag") gTarget.selectAll("circle").call(dragBehaviorTarget);
+
+    // Source points
+    const s = gSource.selectAll("circle").data(source);
+    s.join(
+      enter => enter.append("circle")
+        .attr("class", "source")
+        .attr("r", 6)
+        .attr("cx", d => d[0]).attr("cy", d => d[1]),
+      update => update.attr("cx", d => d[0]).attr("cy", d => d[1]),
+      exit => exit.remove()
+    );
+    attachContextDelete(gSource.selectAll("circle"), source);
+    gSource.selectAll("circle").on("mousedown.drag", null);
+    if (mode === "drag") gSource.selectAll("circle").call(dragBehaviorSource);
+
+    // Optional labels (indices)
+    const lblData = [
+      ...target.map((p,i)=>({p, i, type:"T"})),
+      ...source.map((p,i)=>({p, i, type:"S"})),
+    ];
+    const labels = gLabels.selectAll("text").data(lblData, d => d.type + d.i);
+    labels.join(
+      enter => enter.append("text")
+        .attr("class","label")
+        .attr("x", d => d.p[0] + 8)
+        .attr("y", d => d.p[1] - 8)
+        .text(d => d.type + d.i),
+      update => update
+        .attr("x", d => d.p[0] + 8)
+        .attr("y", d => d.p[1] - 8)
+        .text(d => d.type + d.i),
+      exit => exit.remove()
+    );
+  }
+
+  // --- ICP utilities (2D rigid: rotation + translation) ---
+  function closest(p, set) {
+    let best = set[0], min = Infinity;
+    for (const q of set) {
+      const dx = p[0]-q[0], dy = p[1]-q[1];
+      const d = dx*dx + dy*dy;
+      if (d < min) { min = d; best = q; }
+    }
+    return best;
+  }
+
+  function mean(pts) {
+    return [d3.mean(pts, d => d[0]), d3.mean(pts, d => d[1])];
+  }
+
+  // One ICP step: nearest neighbors + optimal rigid transform via 2x2 SVD (Kabsch-like)
+  function icpStep() {
+    if (!target.length || !source.length) return false;
+
+    // 1) Pair each source point to its nearest target
+    const pairs = source.map(p => [p, closest(p, target)]);
+    const src = pairs.map(d => d[0]);
+    const tgt = pairs.map(d => d[1]);
+
+    // Degenerate if fewer than 2 pairs
+    if (pairs.length < 2) return false;
+
+    // 2) Centroids
+    const muS = mean(src), muT = mean(tgt);
+
+    // 3) Build 2x2 covariance H = X^T Y (centered)
+    let h11=0,h12=0,h21=0,h22=0;
+    for (let i=0;i<pairs.length;i++) {
+      const x1 = src[i][0]-muS[0], x2 = src[i][1]-muS[1];
+      const y1 = tgt[i][0]-muT[0], y2 = tgt[i][1]-muT[1];
+      h11 += x1*y1; h12 += x1*y2;
+      h21 += x2*y1; h22 += x2*y2;
+    }
+
+    // 4) Rotation from H using atan2 for 2D (equivalent to SVD in 2D)
+    const theta = Math.atan2(h12 - h21, h11 + h22);
+    const c = Math.cos(theta), s = Math.sin(theta);
+
+    // 5) Translation t = muT - R*muS
+    const t0 = muT[0] - (c*muS[0] - s*muS[1]);
+    const t1 = muT[1] - (s*muS[0] + c*muS[1]);
+
+    // 6) Apply transform to all source points
+    let maxMoveSq = 0;
+    for (let i=0;i<source.length;i++) {
+      const x = source[i][0], y = source[i][1];
+      const xr = c*x - s*y + t0;
+      const yr = s*x + c*y + t1;
+      const dx = xr - x, dy = yr - y;
+      const moveSq = dx*dx + dy*dy;
+      if (moveSq > maxMoveSq) maxMoveSq = moveSq;
+      source[i][0] = xr; source[i][1] = yr;
+    }
+
+    // Return whether anything significant moved
+    return maxMoveSq > 1e-6;
+  }
+
+  // Random rigid transform applied to current source (or make from target if empty)
+  function randomizeSourceFromTarget() {
+    if (target.length >= 3 && source.length === 0) {
+      // Seed source as a copy of target before transforming
+      source = target.map(p => [p[0], p[1]]);
+    }
+    if (source.length === 0) return;
+
+    const angle = (Math.random()*2 - 1) * Math.PI/4; // ±45°
+    const tx = (Math.random()*2 - 1) * 80;
+    const ty = (Math.random()*2 - 1) * 80;
+    const c = Math.cos(angle), s = Math.sin(angle);
+
+    // Rotate about source centroid to keep it in view
+    const muS = mean(source);
+    for (let i=0;i<source.length;i++) {
+      const x = source[i][0]-muS[0], y = source[i][1]-muS[1];
+      const xr = c*x - s*y + muS[0] + tx;
+      const yr = s*x + c*y + muS[1] + ty;
+      source[i][0] = xr; source[i][1] = yr;
+    }
+    draw();
+  }
+
+  // Initial tiny demo (optional): two triangles
+  target = [[150,120],[240,160],[180,240]];
+  source = [[320,280],[410,320],[350,400]];
+  draw();
+})();
+</script>
+
