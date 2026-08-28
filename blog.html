@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - Casey Meisenzahl</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        video {
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+        }
+        figure {
+            margin: 28px 0;
+        }
+        figcaption {
+            margin-top: 6px;
+            color: #555;
+        }
+        .date {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Casey Meisenzahl</h1>
+    <div class="links">
+        <a href="index.html">Home</a> ·
+        <a href="https://scholar.google.com/citations?user=R3WqdhAAAAAJ" target="_blank">Google Scholar</a>
+    </div>
+
+    <article>
+        <h2>A Small Agent Benchmark</h2>
+        <p class="date">August 28, 2026</p>
+
+        <p>I tried Qwen3 using an open-source harness. It felt like it was 6–12 months behind the frontier models, which is a pretty big difference.</p>
+
+        <p>I thought this might be an interesting benchmark: retrieve the BibTeX entry for a paper. In the first video, the open-source harness is on the left and Codex is on the right.</p>
+
+        <p>The frontier model finishes the job in about one minute. The open-source version needs follow-up prompts, encounters errors, and ultimately fails.</p>
+
+        <figure>
+            <video controls preload="metadata" playsinline>
+                <source src="videos/model-comparison.mp4" type="video/mp4">
+                Your browser does not support embedded video.
+            </video>
+            <figcaption>Open-source harness (left) and Codex (right).</figcaption>
+        </figure>
+
+        <p>I was able to finish the job manually in 30 seconds 😄</p>
+
+        <figure>
+            <video controls preload="metadata" playsinline>
+                <source src="videos/manual-workflow.mp4" type="video/mp4">
+                Your browser does not support embedded video.
+            </video>
+            <figcaption>The same task done manually.</figcaption>
+        </figure>
+    </article>
+</body>
+</html>
